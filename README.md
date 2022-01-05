@@ -2,6 +2,8 @@ Forked from [lucidrains' repo](https://github.com/lucidrains/denoising-diffusion
 
 <img src="./denoising-diffusion.png" width="500px"></img>
 
+Overview: [https://lilianweng.github.io/lil-log/2021/07/11/diffusion-models.html](https://lilianweng.github.io/lil-log/2021/07/11/diffusion-models.html).
+
 ## Denoising Diffusion Probabilistic Model, in Pytorch
 
 Implementation of <a href="https://arxiv.org/abs/2006.11239">Denoising Diffusion Probabilistic Model</a> in Pytorch. It is a new approach to generative modeling that may <a href="https://ajolicoeur.wordpress.com/the-new-contender-to-gans-score-matching-with-langevin-sampling/">have the potential</a> to rival GANs. It uses denoising score matching to estimate the gradient of the data distribution, followed by Langevin sampling to sample from the true distribution. This implementation was transcribed from the official Tensorflow version <a href="https://github.com/hojonathanho/diffusion">here</a>. 
@@ -95,3 +97,11 @@ Samples and model checkpoints will be logged to `./results` periodically
     note    = {under review}
 }
 ```
+
+## TODO
+
+- [ ] Complete code refactor and documentation
+- [ ] Implement training + sampling as entry points
+- [ ] Train / test on image dataset: natural images and dynamical model output
+- [ ] Implement conditional sampling: [Dhariwal and Nichol, 2021](https://arxiv.org/abs/2105.05233)
+- [ ] Super resolution (?) [Ho et al., 2021](https://arxiv.org/abs/2106.15282) and [Li et al., 2021](https://arxiv.org/abs/2104.14951)
