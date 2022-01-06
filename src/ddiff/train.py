@@ -1,17 +1,17 @@
-from ddiff.unet import Unet
+from ddiff.unet import UNet
 from ddiff.gaussdiff import GaussianDiffusion
 from ddiff.trainer import Trainer
 
 
 def train() -> None:
-    model = Unet(dim=64, dim_mults=(1, 2, 4, 8)).cuda()
-
-    diffusion = GaussianDiffusion(model, image_size=128, timesteps=1000, loss_type="l1").cuda()  # number of steps  # L1 or L2
+    """Trains a Gaussian diffusion model on an RGB Image dataset"""
+    model = UNet(dim=64, dim_mults=(1, 2, 4, 8)).cuda()
+    diffusion = GaussianDiffusion(model, image_size=128, timesteps=1000, loss_type="l1").cuda()
 
     # TODO: build up image dir
     trainer = Trainer(
         diffusion,
-        "path/to/your/images",
+        "/data/malexe/cifar10/cifar-10-jpeg",
         train_batch_size=32,
         train_lr=2e-5,
         train_num_steps=700000,  # total training steps

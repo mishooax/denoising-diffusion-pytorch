@@ -3,11 +3,11 @@ import copy
 from pathlib import Path
 
 import torch
-from torch.optim import Adam
+import torch.nn as nn
 from torch.utils import data
 from torchvision.utils import save_image
 
-from ddiff.dataset import Dataset
+from ddiff.dataset import ImageDataset
 from ddiff.utils import cycle, num_to_groups
 from ddiff.layers import EMA
 from ddiff.logger import get_logger
@@ -15,33 +15,23 @@ from ddiff.logger import get_logger
 LOGGER = get_logger(__name__)
 
 
-# TODO: refactor
-def loss_backwards(fp16, loss, optimizer, **kwargs):
-    del optimizer  # not used
-    if fp16:
-        raise RuntimeError
-        # with amp.scale_loss(loss, optimizer) as scaled_loss:
-        #     scaled_loss.backward(**kwargs)
-    loss.backward(**kwargs)
-
-
 class Trainer:
     def __init__(
         self,
-        diffusion_model,
+        diffusion_model: nn.Module,
         folder,
         *,
-        ema_decay=0.995,
-        image_size=128,
-        train_batch_size=32,
-        train_lr=2e-5,
-        train_num_steps=100000,
-        gradient_accumulate_every=2,
+        ema_decay: float = 0.995,
+        image_size: int = 128,
+        train_batch_size: int = 128,
+        train_lr: float = 2e-5,
+        train_num_steps: int = 100000,
+        gradient_accumulate_every: int = 2,
         # fp16=False,
-        step_start_ema=2000,
-        update_ema_every=10,
-        save_and_sample_every=1000,
-        results_folder="./results",
+        step_start_ema: int = 2000,
+        update_ema_every: int = 10,
+        save_and_sample_every: int = 1000,
+        results_folder: str = "/data/malexe/scratch/DDIFF/training/results",
     ):
         super().__init__()
         self.model = diffusion_model
@@ -57,18 +47,12 @@ class Trainer:
         self.gradient_accumulate_every = gradient_accumulate_every
         self.train_num_steps = train_num_steps
 
-        self.ds = Dataset(folder, image_size)
+        self.ds = ImageDataset(folder, image_size)
         self.dl = cycle(data.DataLoader(self.ds, batch_size=train_batch_size, shuffle=True, pin_memory=True))
-        self.opt = Adam(diffusion_model.parameters(), lr=train_lr)
+        self.opt = torch.optim.Adam(diffusion_model.parameters(), lr=train_lr)
 
         self.step = 0
         self.fp16 = False
-
-        # assert not fp16 or fp16 and APEX_AVAILABLE, "Apex must be installed in order for mixed precision training to be turned on"
-
-        # self.fp16 = fp16
-        # if fp16:
-        #     (self.model, self.ema_model), self.opt = amp.initialize([self.model, self.ema_model], self.opt, opt_level="O1")
 
         self.results_folder = Path(results_folder)
         self.results_folder.mkdir(exist_ok=True)
@@ -95,14 +79,15 @@ class Trainer:
         self.ema_model.load_state_dict(load_data["ema"])
 
     def train(self):
-        backwards = partial(loss_backwards, self.fp16)
+        # backwards = partial(loss_backwards, self.fp16)
 
         while self.step < self.train_num_steps:
             for _ in range(self.gradient_accumulate_every):
                 batch_data = next(self.dl).cuda()
                 loss = self.model(batch_data)
-                LOGGER.debug("%d: %.2e", self.step, loss.item())
-                backwards(loss / self.gradient_accumulate_every, self.opt)
+                if self.step % 100 == 0:
+                    LOGGER.debug("%d: %.2e", self.step, loss.item())
+                (loss / self.gradient_accumulate_every).backward()
 
             self.opt.step()
             self.opt.zero_grad()

@@ -7,7 +7,7 @@ from torch.utils import data
 from torchvision import transforms
 
 
-class Dataset(data.Dataset):
+class ImageDataset(data.Dataset):
     def __init__(self, folder, image_size, exts: Tuple = ("jpg", "jpeg", "png")):
         super().__init__()
         self.folder = folder
@@ -20,6 +20,7 @@ class Dataset(data.Dataset):
                 transforms.RandomHorizontalFlip(),
                 transforms.CenterCrop(image_size),
                 transforms.ToTensor(),
+                # why are we using this transform?
                 transforms.Lambda(lambda t: (t * 2) - 1),
             ]
         )

@@ -1,3 +1,5 @@
+from typing import Tuple, Optional
+
 import torch
 from torch import nn
 
@@ -16,8 +18,8 @@ from ddiff.utils import default
 
 
 # Gaussian diffusion trainer class
-class Unet(nn.Module):
-    def __init__(self, dim, out_dim=None, dim_mults=(1, 2, 4, 8), channels=3, with_time_emb=True):
+class UNet(nn.Module):
+    def __init__(self, dim, out_dim: Optional[int] = None, dim_mults: Tuple = (1, 2, 4, 8), channels: int = 3, with_time_emb: bool = True):
         super().__init__()
         self.channels = channels
 

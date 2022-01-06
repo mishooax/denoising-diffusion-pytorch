@@ -22,17 +22,13 @@ def cosine_beta_schedule(timesteps: int, s: float = 0.008) -> np.ndarray:
 
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, denoise_fn, *, image_size, channels=3, timesteps: int = 1000, loss_type: str = "l1", betas=None):
+    def __init__(self, denoise_model: nn.Module, *, image_size: int, channels: int = 3, timesteps: int = 1000, loss_type: str = "l1") -> None:
         super().__init__()
         self.channels = channels
         self.image_size = image_size
-        self.denoise_fn = denoise_fn
+        self.denoise_model = denoise_model
 
-        if betas is not None:
-            betas = betas.detach().cpu().numpy() if isinstance(betas, torch.Tensor) else betas
-        else:
-            betas = cosine_beta_schedule(timesteps)
-
+        betas = cosine_beta_schedule(timesteps)
         alphas = 1.0 - betas
         alphas_cumprod = np.cumprod(alphas, axis=0)
         alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1])
@@ -86,7 +82,7 @@ class GaussianDiffusion(nn.Module):
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
     def p_mean_variance(self, x, t, clip_denoised: bool):
-        x_recon = self.predict_start_from_noise(x, t=t, noise=self.denoise_fn(x, t))
+        x_recon = self.predict_start_from_noise(x, t=t, noise=self.denoise_model(x, t))
 
         if clip_denoised:
             x_recon.clamp_(-1.0, 1.0)
@@ -149,7 +145,7 @@ class GaussianDiffusion(nn.Module):
         noise = default(noise, lambda: torch.randn_like(x_start))
 
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
-        x_recon = self.denoise_fn(x_noisy, t)
+        x_recon = self.denoise_model(x_noisy, t)
 
         if self.loss_type == "l1":
             loss = (noise - x_recon).abs().mean()

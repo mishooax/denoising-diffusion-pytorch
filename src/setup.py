@@ -2,7 +2,6 @@ from setuptools import setup, find_packages
 
 setup(
     name="ddiff",
-    packages=find_packages(),
     version="0.1",
     license="MIT",
     description="Denoising Diffusion Probabilistic Models - Pytorch",
@@ -10,12 +9,11 @@ setup(
     author_email="lucidrains@gmail.com / ma_ecmwf@gmail.com",
     url="https://github.com/lucidrains/denoising-diffusion-pytorch",
     keywords=["artificial intelligence", "generative models"],
-    install_requires=["einops", "numpy", "pillow", "torch", "torchvision", "tqdm"],
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.6",
-    ],
+    packages=find_packages(include=["ddiff", "ddiff.*"]),
+    entry_points={
+        "console_scripts": [
+            "ddiff-train=aqgan.train:main",
+            "ddiff-sample=aqgan.sample:main",
+        ]
+    },
 )

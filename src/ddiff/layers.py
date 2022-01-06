@@ -101,6 +101,7 @@ class PreNorm(nn.Module):
 class Block(nn.Module):
     def __init__(self, dim, dim_out, groups=8):
         super().__init__()
+        # TODO: get rid of hardcoded RGB channels (3)
         self.block = nn.Sequential(nn.Conv2d(dim, dim_out, 3, padding=1), nn.GroupNorm(groups, dim_out), Mish())
 
     def forward(self, x):
